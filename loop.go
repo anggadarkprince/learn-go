@@ -14,6 +14,15 @@ func main() {
 		counter++
 	}
 
+	counter = 1
+	for {
+		if counter > 3 {
+			break
+		}
+		fmt.Println("Alt iteration", counter)
+		counter++
+	}
+
 	// For with statement (init and post)
 	for counter := 1; counter <= 5; counter++ {
 		if counter % 2 == 0 {
