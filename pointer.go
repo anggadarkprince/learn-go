@@ -32,6 +32,9 @@ func main() {
 	// what if I need by reference, then we can use Pointer
 	// we use operator & following with the variable name
 	var address3 *Address = &address1 // address3 is a pointer to address1, so when we modify address3 then address1 will be change
+	addressX := address3 // not copy since the address3 it's pointer
+	addressX.City = "Surabaya"
+	fmt.Println(addressX, address3)
 
 	address3.City = "Sidoarjo"
 	fmt.Println(address3)
@@ -47,9 +50,10 @@ func main() {
 
 	fmt.Println("--------- * operator")
 
-	// if we want to change address3 value but also want the referenced changed (with assignment) then use *
+	// Dereferencing a Pointer: change the value from pointer
+	// * operator used to get the value stored at the pointer’s address.
 	address4 := &address1
-	*address4 = Address{"Gresik", "East Java", "Indonesia"} // assign by reference, not by original variable
+	*address4 = Address{"Gresik", "East Java", "Indonesia"} // Changing value at the address stored in address4
 	fmt.Println(address4)
 	fmt.Println(address1) // original also changed 
 
