@@ -58,6 +58,26 @@ func TestServerMux(t *testing.T) {
 	}
 }
 
+func TestHandleWithParams(t *testing.T) {
+	// Initialize the server
+	server := http.Server{
+		Addr:   "localhost:8080",
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /posts/{id}", func(w http.ResponseWriter, r *http.Request) {
+		postId := r.PathValue("id")
+		fmt.Fprintf(w, "Post: %s", postId)
+	})
+
+	server.Handler = mux
+
+	err := server.ListenAndServe()
+	if err != nil {
+		panic(err)
+	}
+}
+
 func TestRequest(t *testing.T) {
 	// Initialize the server
 	server := http.Server{
