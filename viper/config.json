@@ -1,0 +1,15 @@
+{
+    "app": {
+        "name": "Viper",
+        "version": "1.0.0",
+        "description": "A powerful configuration management tool"
+    },
+    "database": {
+        "host": "localhost",
+        "port": 3306,
+        "user": "root",
+        "password": "secure_password",
+        "name": "db_v1",
+        "debug": true
+    }
+}
