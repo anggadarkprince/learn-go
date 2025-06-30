@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"orm/models"
 	"strconv"
 	"testing"
 
@@ -9,7 +10,7 @@ import (
 )
 
 func TestCreateUser(t *testing.T) {
-	user := User{
+	user := models.User{
 		ID: 1,
 		Name: "Angga",
 		Username: "angga.ari",
@@ -24,10 +25,10 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestBatchInsert(t *testing.T) {
-	var users []User
+	var users []models.User
 	for i := 2; i <= 10; i++ {
-		users = append(users, User{
-			ID: i,
+		users = append(users, models.User{
+			ID: uint64(i),
 			Name: "User " + strconv.Itoa(i),
 			Username: "user_" + strconv.Itoa(i),
 			Email: "user_" + strconv.Itoa(i) + "@mail.com",
@@ -43,20 +44,20 @@ func TestBatchInsert(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	user := User{
+	user := models.User{
 		ID: 1,
 		Name: "Angga Ari",
 		Username: "angga.ari",
 		Email: "", // Not included when passing default type value, use map instead
 	}
-	response := db.Model(&user).Where("id = ?", user.ID).Updates(User{Name: user.Name, Email: user.Email})
+	response := db.Model(&user).Where("id = ?", user.ID).Updates(models.User{Name: user.Name, Email: user.Email})
 	assert.Nil(t, response.Error)
 	assert.Equal(t, int64(1), response.RowsAffected, "Expected one row to be updated")
 }
 
 func TestAutoIncrement(t *testing.T) {
 	for i := 1; i <= 10; i++ {
-		userLog := UserLog{
+		userLog := models.UserLog{
 			UserID:    i,
 			Action:    "test action",
 		}
@@ -68,7 +69,7 @@ func TestAutoIncrement(t *testing.T) {
 }
 
 func TestSaveOrUpdate(t *testing.T) {
-	userLog := UserLog{
+	userLog := models.UserLog{
 		UserID: 1,
 		Action: "Data Updated",
 	}
@@ -82,7 +83,7 @@ func TestSaveOrUpdate(t *testing.T) {
 }
 
 func TestSaveOrUpdateNonAutoIncrement(t *testing.T) {
-	userLog := UserLog{
+	userLog := models.UserLog{
 		ID: 1, // Assuming this ID already exists
 		UserID: 1,
 		Action: "Data Updated",
@@ -100,7 +101,7 @@ func TestSaveOrUpdateNonAutoIncrement(t *testing.T) {
 }
 
 func TestConflict(t *testing.T) {
-	user := User{
+	user := models.User{
 		ID: 88,
 		Name: "Angga Conflict",
 	}
@@ -118,7 +119,7 @@ func TestConflict(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 	// Delete by loading the record first
-	var user User
+	var user models.User
 	db.Take(&user, 9) // Assuming this user exists
 	assert.NotZero(t, user.ID, "Expected user with ID 9 to exist")
 
@@ -126,7 +127,7 @@ func TestDeleteUser(t *testing.T) {
 	assert.Nil(t, err, "Expected no error when deleting user")
 
 	// Delete by ID without loading the record first
-	userId := User{
+	userId := models.User{
 		ID: 10, // Assuming this user exists
 	}
 	response := db.Delete(&userId)
@@ -143,7 +144,7 @@ func TestDeleteUser(t *testing.T) {
 
 func TestSoftDelete(t *testing.T) {
 	// Soft delete by loading the record first
-	todo := Todo{
+	todo := models.Todo{
 		UserID: 1,
 		Title: "Test Todo",
 		Description: "This is a test todo",
@@ -156,7 +157,7 @@ func TestSoftDelete(t *testing.T) {
 	assert.NotZero(t, todo.ID, "Expected todo ID to be set after soft delete")
 	assert.NotNil(t, todo.DeletedAt, "Expected DeletedAt to be set after soft delete")
 
-	var todos []Todo
+	var todos []models.Todo
 	// SELECT * FROM `todos` WHERE `todos`.`deleted_at` IS NULL
 	err = db.Find(&todos).Error
 	assert.Nil(t, err, "Expected no error when querying todos after soft delete")
@@ -165,7 +166,7 @@ func TestSoftDelete(t *testing.T) {
 
 func TestUnscoped(t *testing.T) {
 	// Unscoped delete to permanently remove the record
-	todo := Todo{
+	todo := models.Todo{
 		UserID: 1,
 		Title: "Test Todo",
 		Description: "This is a test todo",
@@ -178,7 +179,7 @@ func TestUnscoped(t *testing.T) {
 	assert.NotZero(t, todo.ID, "Expected todo ID to be set after unscoped delete")
 
 	// Get all todos, including soft-deleted ones
-	var todos []Todo
+	var todos []models.Todo
 	err = db.Unscoped().Find(&todos).Error
 	assert.Nil(t, err, "Expected no error when querying todos after unscoped delete")
 }

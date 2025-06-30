@@ -1,12 +1,14 @@
-package orm
+package models
 
-import "time"
+import (
+	"time"
+)
 
 // User => users
 // OrderDetail => order_details
 // https://gorm.io/docs/models.html#Fields-Tags
 type User struct {
-	ID int `gorm:"primaryKey;column:id;autoIncrement;<-:create"`
+	ID uint64 `gorm:"primaryKey;column:id;autoIncrement;<-:create"`
 	Name string `gorm:"column:name"`
 	Username string `gorm:"column:username"`
 	Email string `gorm:"column:email"`
@@ -16,6 +18,9 @@ type User struct {
 	UpdatedAt time.Time `gorm:"column:updated_at;autoCreateTime;autoUpdateTime"`
 	Information string `gorm:"-"` // no need create / update in database (custom attribute that not available in the table)
 	ReferalCode ReferalCode `gorm:"embedded"` // add embeded struct into custom field
+	Wallet Wallet `gorm:"foreignKey:user_id;references:id"` // one to one relationship with Wallet
+	Addresses []Address `gorm:"foreignKey:user_id;references:id"` // one to many relationship with Addresses
+	LikeProducts []Product `gorm:"many2many:user_like_products;foreignKey:id;joinForeignKey:user_id;references:id;joinReferences:product_id"`
 }
 
 type ReferalCode struct {

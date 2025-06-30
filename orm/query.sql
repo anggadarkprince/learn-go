@@ -39,3 +39,42 @@ create table todos (
     primary key (id),
     foreign key (user_id) references users(id) on delete cascade on update cascade
 )
+
+create table wallets (
+    id BIGINT UNSIGNED not null auto_increment,
+    user_id BIGINT UNSIGNED UNIQUE not null,
+    balance DECIMAL(10,2) not null default 0.00,
+    created_at TIMESTAMP not null default CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP not null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+    primary key (id),
+    foreign key (user_id) references users(id) on delete cascade on update cascade
+) engine=InnoDB default charset=utf8mb4;
+
+create table addresses (
+    id BIGINT UNSIGNED not null auto_increment,
+    user_id BIGINT UNSIGNED not null,
+    address TEXT not null,
+    created_at TIMESTAMP not null default CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP not null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+    primary key (id),
+    foreign key (user_id) references users(id) on delete cascade on update cascade
+) engine=InnoDB default charset=utf8mb4;
+
+create table products (
+    id BIGINT UNSIGNED not null auto_increment,
+    name VARCHAR(100) not null,
+    price BIGINT not null,
+    created_at TIMESTAMP not null default CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP not null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+    primary key (id)
+) engine=InnoDB default charset=utf8mb4;
+
+create table user_like_products (
+    user_id BIGINT UNSIGNED not null,
+    product_id BIGINT UNSIGNED not null,
+    created_at TIMESTAMP not null default CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP not null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+    primary key (user_id, product_id),
+    foreign key (user_id) REFERENCES users(id),
+    foreign key (product_id) REFERENCES products(id)
+) engine=InnoDB default charset=utf8mb4;

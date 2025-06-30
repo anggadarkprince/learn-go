@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"orm/models"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +11,7 @@ import (
 
 func TestTransactionSuccess(t *testing.T) {
 	err := db.Transaction(func (tx *gorm.DB) error {
-		err := tx.Create(&User{
+		err := tx.Create(&models.User{
 			Name: "Keenan",
 			Username: "keenan",
 			Email: "keenan@mail.com",
@@ -20,7 +21,7 @@ func TestTransactionSuccess(t *testing.T) {
 			return err
 		}
 
-		err = tx.Create(&User{
+		err = tx.Create(&models.User{
 			Name: "Evander",
 			Username: "evander",
 			Email: "evander@mail.com",
@@ -37,7 +38,7 @@ func TestTransactionSuccess(t *testing.T) {
 
 func TestTransactionRollback(t *testing.T) {
 	err := db.Transaction(func (tx *gorm.DB) error {
-		err := tx.Create(&User{
+		err := tx.Create(&models.User{
 			Name: "Alastair",
 			Username: "alastair",
 			Email: "alastair@mail.com",
@@ -47,7 +48,7 @@ func TestTransactionRollback(t *testing.T) {
 			return err
 		}
 
-		err = tx.Create(&User{
+		err = tx.Create(&models.User{
 			Name: "Evander",
 			Username: "evander", // trigger error unique column
 			Email: "evander@mail.com",
@@ -66,14 +67,14 @@ func TestManualTransaction(t *testing.T) {
 	tx := db.Begin()
 	defer tx. Rollback() // even it's success, the rollback it's not affected
 
-	err1 := tx.Create(&User{
+	err1 := tx.Create(&models.User{
 		Name: "Khusina",
 		Username: "khusina",
 		Email: "khusina@mail.com",
 		Password: "secret",
 	}).Error // make sure this is rollback
 
-	err2 := tx.Create(&User{
+	err2 := tx.Create(&models.User{
 		Name: "Evander",
 		Username: "evander", // trigger error unique column
 		Email: "evander@mail.com",
@@ -87,7 +88,7 @@ func TestManualTransaction(t *testing.T) {
 
 func TestLock(t *testing.T) {
 	tx := db.Transaction(func (tx *gorm.DB) error {
-		var user User
+		var user models.User
 		// SELECT * FROM `users` WHERE `users`.`id` = 1 ORDER BY `users`.`id` LIMIT 1 FOR UPDATE
 		err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&user, 1).Error
 		if err != nil {

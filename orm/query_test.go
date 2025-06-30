@@ -3,6 +3,7 @@ package orm
 import (
 	"errors"
 	"fmt"
+	"orm/models"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,19 +12,19 @@ import (
 
 // https://gorm.io/docs/query.html
 func TestQuerySingleObject(t *testing.T) {
-	user := User{}
+	user := models.User{}
 	// SELECT * FROM `users` ORDER BY `users`.`id` LIMIT 1
 	err := db.First(&user).Error
 	assert.Nil(t, err, "Expected no error when querying single object")
 
-	user = User{}
+	user = models.User{}
 	// SELECT * FROM `users` ORDER BY `users`.`id` DESC LIMIT 1
 	err = db.Last(&user).Error
 	assert.Nil(t, err, "Expected no error when querying last object")
 }
 
 func TestQueryNotFound(t *testing.T) {
-	user := User{}
+	user := models.User{}
 	// SELECT * FROM `users` WHERE id = 9999 ORDER BY `users`.`id` LIMIT 1
 	err := db.First(&user, 9999).Error // should return record not found error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -34,19 +35,19 @@ func TestQueryNotFound(t *testing.T) {
 }
 
 func TestQueryInlineCondition(t *testing.T) {
-	user := User{}
+	user := models.User{}
 	// SELECT * FROM `users` WHERE id = 1 ORDER BY `users`.`id` LIMIT 1
 	err := db.First(&user, "id = ?", 1).Error // with order by
 	assert.Nil(t, err, "Expected no error when querying with inline condition")
 
-	user = User{}
+	user = models.User{}
 	// SELECT * FROM `users` WHERE id = 1 LIMIT 1
 	err = db.Take(&user, "id = ?", 1).Error // without order by
 	assert.Nil(t, err, "Expected no error when querying with inline condition using Take")
 }
 
 func TestQueryGetAll(t *testing.T) {
-	var users []User
+	var users []models.User
 	// SELECT * FROM `users`
 	err := db.Find(&users).Error
 	assert.Nil(t, err, "Expected no error when querying all objects")
@@ -59,7 +60,7 @@ func TestQueryGetAll(t *testing.T) {
 }
 
 func TestQueryCondition(t *testing.T) {
-	var users []User
+	var users []models.User
 	// SELECT * FROM `users` WHERE id > 2 AND status = 'PENDING'
 	err := db.Where("id > ?", 2).Where("status = ?", "PENDING").Find(&users).Error // where should be chained before Find
 	assert.Nil(t, err, "Expected no error when querying with condition")
@@ -73,7 +74,7 @@ func TestQueryCondition(t *testing.T) {
 }
 
 func TestOrOperator(t *testing.T) {
-	var users []User
+	var users []models.User
 	// SELECT * FROM `users` WHERE id > 2 OR status = 'ACTIVATED'
 	err := db.Where("id > ?", 2).Or("status = ?", "ACTIVATED").Find(&users).Error
 	assert.Nil(t, err, "Expected no error when querying with OR operator")
@@ -81,7 +82,7 @@ func TestOrOperator(t *testing.T) {
 }
 
 func TestNotOperator(t *testing.T) {
-	var users []User
+	var users []models.User
 	err := db.Not("id = ?", 1).Where("status = ?", "PENDING").Find(&users).Error
 	assert.Nil(t, err, "Expected no error when querying with NOT operator")
 	assert.Greater(t, len(users), 0, "Expected to find some users not matching condition")
@@ -94,7 +95,7 @@ func TestNotOperator(t *testing.T) {
 }
 
 func TestGroupingCondition(t *testing.T) {
-	var users []User
+	var users []models.User
 	// SELECT * FROM `users` WHERE id > 2 OR (status = 'PENDING' AND name LIKE '%Keenan%')
 	err := db.Where("id > ?", 2).Or(db.Where("status = ?", "PENDING").Where("name LIKE ?", "%Keenan%")).Find(&users).Error
 	assert.Nil(t, err, "Expected no error when querying with grouped conditions")
@@ -102,7 +103,7 @@ func TestGroupingCondition(t *testing.T) {
 }
 
 func TestSelectFields(t *testing.T) {
-	var users []User
+	var users []models.User
 	// SELECT id, name FROM `users`
 	err := db.Select("id, name").Find(&users).Error
 	assert.Nil(t, err, "Expected no error when selecting specific fields")
@@ -123,12 +124,12 @@ func TestSelectFields(t *testing.T) {
 }
 
 func TestStructCondition(t *testing.T) {
-	userCondition := User{
+	userCondition := models.User{
 		Name:   "Angga",
 		Status: "PENDING",
 		Email:  "", // Not included in the query, because it's default value of string, use map condition if you want to include it
 	}
-	var users []User
+	var users []models.User
 	// SELECT * FROM `users` WHERE status = 'PENDING' AND name LIKE '%Angga%'
 	err := db.Where(userCondition).Find(&users).Error
 	assert.Nil(t, err, "Expected no error when querying with struct condition")
@@ -136,7 +137,7 @@ func TestStructCondition(t *testing.T) {
 
 	// Test with multiple struct conditions
 	// SELECT * FROM `users` WHERE `users`.`status` = 'PENDING' OR `users`.`name` = 'Keenan'
-	err = db.Where(User{Status: "PENDING"}).Or(User{Name: "Keenan"}).Find(&users).Error
+	err = db.Where(models.User{Status: "PENDING"}).Or(models.User{Name: "Keenan"}).Find(&users).Error
 	assert.Nil(t, err, "Expected no error when querying with multiple struct conditions")
 	assert.Greater(t, len(users), 0, "Expected to find some users matching multiple struct conditions")
 }
@@ -146,7 +147,7 @@ func TestMapCondition(t *testing.T) {
 	condition := map[string]any{
 		"username": "", // This will be included in the query, even if it's empty
 	}
-	var users []User
+	var users []models.User
 	// SELECT * FROM `users` WHERE `users`.`username` = ''
 	err := db.Where(condition).Find(&users).Error
 	assert.Nil(t, err, "Expected no error when querying with map condition")
@@ -160,7 +161,7 @@ func TestMapCondition(t *testing.T) {
 }
 
 func TestQueryWithLimitAndOffset(t *testing.T) {
-	var users []User
+	var users []models.User
 	// SELECT * FROM `users` ORDER BY username asc, email desc LIMIT 2 OFFSET 1
 	err := db.Order("username asc, email desc").Limit(2).Offset(1).Find(&users).Error
 	assert.Nil(t, err, "Expected no error when querying with limit and offset")
@@ -182,21 +183,21 @@ type UserResponse struct {
 func TestQueryNonModel(t *testing.T) {
 	var count int64
 	// SELECT COUNT(*) FROM `users`
-	err := db.Model(&User{}).Count(&count).Error
+	err := db.Model(&models.User{}).Count(&count).Error
 	assert.Nil(t, err, "Expected no error when counting users")
 	assert.Greater(t, count, int64(0), "Expected to find some users")
 
 	var userResponses []UserResponse
 	// Test with custom query
 	// SELECT `users`.`id`,`users`.`name`,`users`.`username` FROM `users` WHERE status = 'PENDING'
-	err = db.Model(&User{}).Where("status = ?", "PENDING").Find(&userResponses).Error
+	err = db.Model(&models.User{}).Where("status = ?", "PENDING").Find(&userResponses).Error
 	assert.Nil(t, err, "Expected no error when counting users with condition")
 	assert.Greater(t, count, int64(0), "Expected to find some users with status PENDING")
 }
 
 // https://gorm.io/docs/update.html#Updates-multiple-columns
 func TestUpdateUsingSave(t *testing.T) {
-	user := User{}
+	user := models.User{}
 	// SELECT * FROM `users` WHERE `users`.`id` = 1 LIMIT 1
 	err := db.Take(&user, 1).Error
 	assert.Nil(t, err, "Expected no error when querying user for update")
@@ -209,7 +210,7 @@ func TestUpdateUsingSave(t *testing.T) {
 	assert.Nil(t, err, "Expected no error when updating user status")
 
 	// Verify update
-	updatedUser := User{}
+	updatedUser := models.User{}
 	err = db.Take(&updatedUser, 1).Error
 	assert.Nil(t, err, "Expected no error when querying updated user")
 	assert.Equal(t, "ACTIVATED", updatedUser.Status, "Expected user status to be updated to ACTIVATED")
@@ -218,24 +219,24 @@ func TestUpdateUsingSave(t *testing.T) {
 func TestUpdateSelectedColumn(t *testing.T) {
 	// Update single column from empty model
 	// UPDATE `users` SET `email`='angga@mail.com' WHERE id = 1
-	err := db.Model(&User{}).Where("id = ?", 1).Update("email", "angga@mail.com").Error
+	err := db.Model(&models.User{}).Where("id = ?", 1).Update("email", "angga@mail.com").Error
 	assert.Nil(t, err, "Expected no error when updating user email")
 
 	// UPDATE `users` SET `name`='Angga',`status`='ACTIVATED' WHERE id = 1
-	err = db.Model(&User{}).Where("id = ?", 1).Updates(map[string]any{
+	err = db.Model(&models.User{}).Where("id = ?", 1).Updates(map[string]any{
 		"name":   "Angga",
 		"status": "ACTIVATED",
 	}).Error
 	assert.Nil(t, err, "Expected no error when updating user name and status")
 
 	// Update from existing model
-	user := User{}
+	user := models.User{}
 	// SELECT * FROM `users` WHERE `users`.`id` = 1 LIMIT 1
 	err = db.Take(&user, 1).Error
 	assert.Nil(t, err, "Expected no error when querying user for update")
 
 	// UPDATE `users` SET `name`='Angga',`status`='ACTIVATED',`email`='' WHERE `id` = 1
-	err = db.Model(&user).Select("Name", "Email", "Status").Updates(User{
+	err = db.Model(&user).Select("Name", "Email", "Status").Updates(models.User{
 		Name:   "Angga",
 		Status: "ACTIVATED",
 		// Email will set to default value of string because it's mentioned in Select
@@ -243,7 +244,7 @@ func TestUpdateSelectedColumn(t *testing.T) {
 	assert.Nil(t, err, "Expected no error when updating selected columns")
 
 	// UPDATE `users` SET `email`='angga@mail.com' WHERE `id` = 1
-	err = db.Model(&user).Updates(User{
+	err = db.Model(&user).Updates(models.User{
 		Name:   "Angga",
 		Status: "", // Will be ignored because it's passing default value of string, use map or update specific fields if you want to update it
 	}).Error
@@ -255,7 +256,7 @@ func TestUpdateSelectedColumn(t *testing.T) {
 	assert.Nil(t, err, "Expected no error when updating user status")
 
 	// Verify update
-	updatedUser := User{}
+	updatedUser := models.User{}
 	err = db.Take(&updatedUser, 1).Error
 	assert.Nil(t, err, "Expected no error when querying updated user")
 	assert.Equal(t, "ACTIVATED", updatedUser.Status, "Expected user status to be updated to ACTIVATED")
